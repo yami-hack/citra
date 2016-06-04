@@ -116,7 +116,7 @@ set_property(DIRECTORY APPEND PROPERTY
 
 find_package(PNG QUIET)
 if (PNG_FOUND)
-    add_definitions(-DHAVE_PNG)
+    #add_definitions(-DHAVE_PNG)
 else()
     message(STATUS "libpng not found. Some debugging features have been disabled.")
 endif()
@@ -140,7 +140,16 @@ set (THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 if (ENABLE_SDL2)
-    if (CITRA_USE_BUNDLED_SDL2)
+    if (SDL2_PATH)
+        #Temporary add
+        #-DSDL2_PATH=<SDL2-mingw-dev>
+        set(SDL2_FOUND YES)
+        file(COPY ${SDL2_PATH} DESTINATION "${CMAKE_BINARY_DIR}/externals")
+        download_bundled_external("sdl2/" "SDL2-2.0.4" SDL2_PREFIX)
+        set(SDL2_INCLUDE_DIR "${SDL2_PREFIX}/include" CACHE PATH "Path to SDL2 headers")
+        set(SDL2_LIBRARY "${SDL2_PREFIX}/x86_64-w64-mingw32/lib/libSDL2.dll.a" CACHE PATH "Path to SDL2 library")
+        set(SDL2_DLL_DIR "${SDL2_PREFIX}/x86_64-w64-mingw32/lib/" CACHE PATH "Path to SDL2.dll")
+    elseif (CITRA_USE_BUNDLED_SDL2)
         # Detect toolchain and platform
         if (MSVC14 AND ARCHITECTURE_x86_64)
             set(SDL2_VER "SDL2-2.0.4")
@@ -172,6 +181,7 @@ IF (APPLE)
 ELSEIF(MINGW)
     # GCC does not support codecvt, so use iconv instead
     # PSAPI is the Process Status API
+    # TDM-GCC64 support codecvt
     set(PLATFORM_LIBRARIES winmm ws2_32 psapi iconv)
 
     # WSAPoll functionality doesn't exist before WinNT 6.x (Vista and up)

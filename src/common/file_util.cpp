@@ -8,6 +8,9 @@
 #include "common/file_util.h"
 #include "common/logging/log.h"
 
+#if defined(__MINGW64__)
+#include <sec_api/io_s.h>
+#endif
 #ifdef _WIN32
     #include <windows.h>
     #include <shlobj.h> // for SHGetFolderPath
@@ -926,7 +929,7 @@ void IOFile::Swap(IOFile& other)
 bool IOFile::Open(const std::string& filename, const char openmode[])
 {
     Close();
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__MINGW64__)
     _wfopen_s(&m_file, Common::UTF8ToUTF16W(filename).c_str(), Common::UTF8ToUTF16W(openmode).c_str());
 #else
     m_file = fopen(filename.c_str(), openmode);
@@ -980,6 +983,10 @@ bool IOFile::Flush()
 bool IOFile::Resize(u64 size)
 {
     if (!IsOpen() || 0 !=
+#if defined(__MINGW64__)
+        //TDM-GCC64 does not supports _chsize_s ?in <io_s.h>
+        chsize(_fileno(m_file), size)
+#else
 #ifdef _WIN32
         // ector: _chsize sucks, not 64-bit safe
         // F|RES: changed to _chsize_s. i think it is 64-bit safe
@@ -987,6 +994,7 @@ bool IOFile::Resize(u64 size)
 #else
         // TODO: handle 64bit and growing
         ftruncate(fileno(m_file), size)
+#endif
 #endif
     )
         m_good = false;

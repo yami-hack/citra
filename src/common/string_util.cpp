@@ -13,12 +13,26 @@
 #include "common/logging/log.h"
 #include "common/string_util.h"
 
+#if defined(__MINGW64__)
+    //TDM-GCC64
+    #include <Windows.h>
+    #include <codecvt>
+    #include "common/common_funcs.h"
+#else
+#if defined(__MINGW32__)
+    //MINGW32
+    #include <Windows.h>
+    #include <iconv.h>
+    #include "common/common_funcs.h"
+#else30
 #ifdef _MSC_VER
     #include <Windows.h>
     #include <codecvt>
     #include "common/common_funcs.h"
 #else
     #include <iconv.h>
+#endif
+#endif
 #endif
 
 namespace Common {
@@ -52,7 +66,7 @@ bool CharArrayFromFormatV(char* out, int outsize, const char* format, va_list ar
 {
     int writtenCount;
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || !defined(__MINGW64__)
     // You would think *printf are simple, right? Iterate on each character,
     // if it's a format specifier handle it properly, etc.
     //
@@ -292,7 +306,7 @@ std::string ReplaceAll(std::string result, const std::string& src, const std::st
     return result;
 }
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || !defined(__MINGW32__) || defined(__MINGW64__)
 
 std::string UTF16ToUTF8(const std::u16string& input)
 {
@@ -362,6 +376,42 @@ std::string CP1252ToUTF8(const std::string& input)
 }
 
 #else
+
+#if defined(__MINGW32__)
+// MINGW32 and TDM-GCC64
+// Copy from line 337
+static std::wstring CPToUTF16(u32 code_page, const std::string& input)
+{
+    auto const size = MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()), nullptr, 0);
+
+    std::wstring output;
+    output.resize(size);
+
+    if (size == 0 || size != MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()), &output[0], static_cast<int>(output.size())))
+        output.clear();
+
+    return output;
+}
+
+std::wstring UTF8ToUTF16W(const std::string &input)
+{
+    return CPToUTF16(CP_UTF8, input);
+}
+
+std::string UTF16ToUTF8(const std::wstring& input){
+    auto const size = WideCharToMultiByte(CP_UTF8, 0, input.data(), static_cast<int>(input.size()), nullptr, 0, nullptr, nullptr);
+
+    std::string output;
+    output.resize(size);
+
+    if (size == 0 || size != WideCharToMultiByte(CP_UTF8, 0, input.data(), static_cast<int>(input.size()), &output[0], static_cast<int>(output.size()), nullptr, nullptr))
+        output.clear();
+
+    return output;
+}
+
+#endif
+
 
 template <typename T>
 static std::string CodeToUTF8(const char* fromcode, const std::basic_string<T>& input)
