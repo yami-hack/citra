@@ -24,7 +24,7 @@
     #include <Windows.h>
     #include <iconv.h>
     #include "common/common_funcs.h"
-#else30
+#else
 #ifdef _MSC_VER
     #include <Windows.h>
     #include <codecvt>
@@ -338,7 +338,7 @@ static std::wstring CPToUTF16(u32 code_page, const std::string& input)
 {
     auto const size = MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()), nullptr, 0);
 
-    std::wstring output;
+    std::wstring output(size,'\0');
     output.resize(size);
 
     if (size == 0 || size != MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()), &output[0], static_cast<int>(output.size())))
@@ -384,7 +384,7 @@ static std::wstring CPToUTF16(u32 code_page, const std::string& input)
 {
     auto const size = MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()), nullptr, 0);
 
-    std::wstring output;
+    std::wstring output(size,'\0');
     output.resize(size);
 
     if (size == 0 || size != MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()), &output[0], static_cast<int>(output.size())))
@@ -411,7 +411,6 @@ std::string UTF16ToUTF8(const std::wstring& input){
 }
 
 #endif
-
 
 template <typename T>
 static std::string CodeToUTF8(const char* fromcode, const std::basic_string<T>& input)

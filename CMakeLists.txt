@@ -116,7 +116,7 @@ set_property(DIRECTORY APPEND PROPERTY
 
 find_package(PNG QUIET)
 if (PNG_FOUND)
-    #add_definitions(-DHAVE_PNG)
+    add_definitions(-DHAVE_PNG)
 else()
     message(STATUS "libpng not found. Some debugging features have been disabled.")
 endif()
