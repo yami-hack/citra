@@ -926,11 +926,17 @@ void IOFile::Swap(IOFile& other)
     std::swap(m_good, other.m_good);
 }
 
+#include <share.h>
 bool IOFile::Open(const std::string& filename, const char openmode[])
 {
     Close();
-#if defined(_WIN32) && !defined(__MINGW64__)
+#if defined(_WIN32)
+#if defined(__MINGW64__)
+    //SH_DENYNO better?
+    this->m_file = _wfsopen(Common::UTF8ToUTF16W(filename).c_str(), Common::UTF8ToUTF16W(openmode).c_str(),SH_DENYNO);
+#else
     _wfopen_s(&m_file, Common::UTF8ToUTF16W(filename).c_str(), Common::UTF8ToUTF16W(openmode).c_str());
+#endif
 #else
     m_file = fopen(filename.c_str(), openmode);
 #endif
@@ -985,7 +991,7 @@ bool IOFile::Resize(u64 size)
     if (!IsOpen() || 0 !=
 #if defined(__MINGW64__)
         //TDM-GCC64 does not supports _chsize_s ?in <io_s.h>
-        chsize(_fileno(m_file), size)
+        _chsize(_fileno(m_file), size)
 #else
 #ifdef _WIN32
         // ector: _chsize sucks, not 64-bit safe

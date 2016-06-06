@@ -34,6 +34,33 @@
 
 #include "video_core/video_core.h"
 
+#if defined(__MINGW64__)
+#include <windows.h>
+#include "common/string_util.h"
+
+//Temporary add
+//I am a very lazy person
+//Copy from string_util.cpp line:330
+static std::wstring CPToUTF16(u32 code_page, const std::string& input)
+{
+    auto const size = MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()), nullptr, 0);
+    std::wstring output(size,'\0');
+    output.resize(size);
+
+    if (size == 0 || size != MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()), &output[0], static_cast<int>(output.size())))
+        output.clear();
+    return output;
+}
+
+static std::string CP_ACPToUtf8(char*text)
+{
+    std::string t = text;
+    std::wstring utf16 = CPToUTF16(CP_ACP,t);
+    std::string out;
+    out = Common::UTF16ToUTF8(utf16);
+    return out;
+}
+#endif
 
 static void PrintHelp(const char *argv0)
 {
@@ -86,7 +113,13 @@ int main(int argc, char **argv) {
                 return 0;
             }
         } else {
+            //In TDM-GCC64,argvs string encoding is CP_ACP
+            //But _wsopen(), file_util.cpp using UTF8ToUTF16W conversion encoding,boot_filename is UTF8 encode?
+#if defined(__MINGW64__)
+            boot_filename = CP_ACPToUtf8(argv[optind]);
+#else
             boot_filename = argv[optind];
+#endif
             optind++;
         }
     }

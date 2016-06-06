@@ -19,19 +19,12 @@
     #include <codecvt>
     #include "common/common_funcs.h"
 #else
-#if defined(__MINGW32__)
-    //MINGW32
-    #include <Windows.h>
-    #include <iconv.h>
-    #include "common/common_funcs.h"
-#else
 #ifdef _MSC_VER
     #include <Windows.h>
     #include <codecvt>
     #include "common/common_funcs.h"
 #else
     #include <iconv.h>
-#endif
 #endif
 #endif
 
@@ -310,7 +303,7 @@ std::string ReplaceAll(std::string result, const std::string& src, const std::st
 
 std::string UTF16ToUTF8(const std::u16string& input)
 {
-#if _MSC_VER >= 1900
+#if _MSC_VER >= 1900 && defined(__MINGW64__)
     // Workaround for missing char16_t/char32_t instantiations in MSVC2015
     std::wstring_convert<std::codecvt_utf8_utf16<__int16>, __int16> convert;
     std::basic_string<__int16> tmp_buffer(input.cbegin(), input.cend());
@@ -323,7 +316,7 @@ std::string UTF16ToUTF8(const std::u16string& input)
 
 std::u16string UTF8ToUTF16(const std::string& input)
 {
-#if _MSC_VER >= 1900
+#if _MSC_VER >= 1900 && defined(__MINGW64__)
     // Workaround for missing char16_t/char32_t instantiations in MSVC2015
     std::wstring_convert<std::codecvt_utf8_utf16<__int16>, __int16> convert;
     auto tmp_buffer = convert.from_bytes(input);
@@ -337,13 +330,11 @@ std::u16string UTF8ToUTF16(const std::string& input)
 static std::wstring CPToUTF16(u32 code_page, const std::string& input)
 {
     auto const size = MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()), nullptr, 0);
-
     std::wstring output(size,'\0');
     output.resize(size);
 
     if (size == 0 || size != MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()), &output[0], static_cast<int>(output.size())))
         output.clear();
-
     return output;
 }
 
@@ -376,41 +367,6 @@ std::string CP1252ToUTF8(const std::string& input)
 }
 
 #else
-
-#if defined(__MINGW32__)
-// MINGW32 and TDM-GCC64
-// Copy from line 337
-static std::wstring CPToUTF16(u32 code_page, const std::string& input)
-{
-    auto const size = MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()), nullptr, 0);
-
-    std::wstring output(size,'\0');
-    output.resize(size);
-
-    if (size == 0 || size != MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()), &output[0], static_cast<int>(output.size())))
-        output.clear();
-
-    return output;
-}
-
-std::wstring UTF8ToUTF16W(const std::string &input)
-{
-    return CPToUTF16(CP_UTF8, input);
-}
-
-std::string UTF16ToUTF8(const std::wstring& input){
-    auto const size = WideCharToMultiByte(CP_UTF8, 0, input.data(), static_cast<int>(input.size()), nullptr, 0, nullptr, nullptr);
-
-    std::string output;
-    output.resize(size);
-
-    if (size == 0 || size != WideCharToMultiByte(CP_UTF8, 0, input.data(), static_cast<int>(input.size()), &output[0], static_cast<int>(output.size()), nullptr, nullptr))
-        output.clear();
-
-    return output;
-}
-
-#endif
 
 template <typename T>
 static std::string CodeToUTF8(const char* fromcode, const std::basic_string<T>& input)
