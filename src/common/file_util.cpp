@@ -928,7 +928,7 @@ bool IOFile::Open(const std::string& filename, const char openmode[])
 {
     Close();
 #ifdef _WIN32
-#if defined(__MINGW64__)
+#if defined(__MINGW64__) && !defined(MINGW_HAS_SECURE_API)
     m_file = _wfsopen(Common::UTF8ToUTF16W(filename).c_str(), Common::UTF8ToUTF16W(openmode).c_str(), SH_DENYNO);
 #else
     _wfopen_s(&m_file, Common::UTF8ToUTF16W(filename).c_str(), Common::UTF8ToUTF16W(openmode).c_str());
@@ -987,7 +987,7 @@ bool IOFile::Resize(u64 size)
     if (!IsOpen() || 0 !=
 
 #ifdef _WIN32
-#if defined(__MINGW64__)
+#if defined(__MINGW64__) && !defined(MINGW_HAS_SECURE_API)
         //TDM-GCC64 does not supports _chsize_s ?in <io_s.h>
         _chsize(_fileno(m_file), size)
 #else
