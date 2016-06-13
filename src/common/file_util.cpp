@@ -929,7 +929,7 @@ bool IOFile::Open(const std::string& filename, const char openmode[])
     Close();
 #ifdef _WIN32
 #if defined(__MINGW64__)
-    m_file = _wfsopen(Common::UTF8ToUTF16W(filename).c_str(), Common::UTF8ToUTF16W(openmode).c_str(),SH_DENYNO);
+    m_file = _wfsopen(Common::UTF8ToUTF16W(filename).c_str(), Common::UTF8ToUTF16W(openmode).c_str(), SH_DENYNO);
 #else
     _wfopen_s(&m_file, Common::UTF8ToUTF16W(filename).c_str(), Common::UTF8ToUTF16W(openmode).c_str());
 #endif
