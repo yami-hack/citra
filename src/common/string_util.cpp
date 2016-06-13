@@ -13,7 +13,7 @@
 #include "common/logging/log.h"
 #include "common/string_util.h"
 
-#if defined(_MSC_VER) || __MINGW64__
+#if defined(_MSC_VER) || defined(__MINGW64__)
     #include <Windows.h>
     #include <codecvt>
     #include "common/common_funcs.h"
@@ -52,7 +52,7 @@ bool CharArrayFromFormatV(char* out, int outsize, const char* format, va_list ar
 {
     int writtenCount;
 
-#if defined(_MSC_VER) || !defined(__MINGW64__)
+#if defined(_MSC_VER)
     // You would think *printf are simple, right? Iterate on each character,
     // if it's a format specifier handle it properly, etc.
     //
@@ -292,7 +292,7 @@ std::string ReplaceAll(std::string result, const std::string& src, const std::st
     return result;
 }
 
-#if defined(_MSC_VER) || !__MINGW32__ || __MINGW64__
+#if defined(_MSC_VER) || defined(__MINGW64__)
 
 std::string UTF16ToUTF8(const std::u16string& input)
 {
@@ -323,7 +323,7 @@ std::u16string UTF8ToUTF16(const std::string& input)
 static std::wstring CPToUTF16(u32 code_page, const std::string& input)
 {
     auto const size = MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()), nullptr, 0);
-    std::wstring output(size,'\0');
+    std::wstring output;
     output.resize(size);
 
     if (size == 0 || size != MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()), &output[0], static_cast<int>(output.size())))
